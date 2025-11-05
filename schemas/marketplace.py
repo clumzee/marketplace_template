@@ -1,5 +1,6 @@
+from typing import Dict, Literal
+
 from pydantic import BaseModel, Field
-from typing import Dict
 
 
 class Org(BaseModel):
@@ -10,8 +11,8 @@ class Org(BaseModel):
 class User(BaseModel):
 
     org_id: str
-    role: str
-    status: str
+    role: Literal["member", "admin"]
+    status: Literal["active", "inactive"]
 
 class Template(BaseModel):
 
