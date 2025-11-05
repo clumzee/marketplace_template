@@ -44,4 +44,6 @@ item_router = crud_router(
     update_schema=Item,
     path="/items",
     tags=["Items"],
+    included_methods=['read', 'update', 'delete']
+
 )
