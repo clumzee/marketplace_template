@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    DB_URL_URL: str
+    DB_URL: str
     API_V1_PREFIX: str = "/api/v1"
     ALLOWED_HOSTS: List[str] = ["*"]
 
