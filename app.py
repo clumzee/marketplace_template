@@ -1,25 +1,27 @@
 import csv
+
 from io import StringIO
 
-from fastapi import (APIRouter, Depends, FastAPI, File, HTTPException,
+import jwt
+from fastapi import (APIRouter, Depends, FastAPI, File, HTTPException, Security,
                      UploadFile)
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastcrud import FastCRUD
 from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
+from sqlmodel import select
 
+from core.auth import create_access_token, verify_password, require_user
+from core.config import settings
 from core.database import get_session, org_scope_query
-from models import User as UserTable
 from models import OutboundItem as ItemTable
 from models import Template as TemplateTable
-
+from models import User as UserTable
 from routers.marketplace import (item_router, org_router, template_router,
                                  user_router)
 from schemas.marketplace import Item, Org, Template, User
 from services.items import db_health_check
-from sqlmodel import select
 
 app = FastAPI()
 
@@ -29,12 +31,32 @@ async def root(db: Session = Depends(get_session)):
 
     try:
         _ = db_health_check(db)
-        print(f"Action Server Health Check completed")
+        print(f"Health Check completed")
         return {"status": "ok"}
     except Exception as e:
-        print(f"Action Server Health Check failed")
+        print(f"Health Check failed")
         raise HTTPException(status_code=500, detail=f"DB connection failed: {str(e)}")
 
+@app.get("/login")
+async def root(user_id: str, password: str, session: AsyncSession = Depends(get_session)):
+
+    try:
+        # Fetching Templates for the Organization
+        query = select(UserTable)
+        query = query.where(UserTable.id == user_id)
+
+        user = await session.execute(query)
+        user = user.scalars().first()
+
+        if not user or not verify_password(password, user.password):
+            raise HTTPException(status_code=403, detail=f"Wrong UserID or Password")
+        
+        access_token = create_access_token({"id":str(user.id)}, settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+
+        return {"token": f"Bearer {access_token}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"{str(e)}")
 
 
 custom_user_router = APIRouter(prefix="/users", tags=["Users"])
@@ -104,10 +126,10 @@ async def add_item(
 
 
 
-app.include_router(org_router)
-app.include_router(user_router)
-app.include_router(custom_user_router)
-app.include_router(template_router)
-app.include_router(item_router)
-app.include_router(custom_items_router)
-app.include_router(custom_items_router)
+app.include_router(org_router, dependencies=[Security(require_user)])
+app.include_router(user_router, dependencies=[Security(require_user)])
+app.include_router(custom_user_router, dependencies=[Security(require_user)])
+app.include_router(template_router, dependencies=[Security(require_user)])
+app.include_router(item_router, dependencies=[Security(require_user)])
+app.include_router(custom_items_router, dependencies=[Security(require_user)])
+app.include_router(custom_items_router, dependencies=[Security(require_user)])

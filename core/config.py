@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     DB_URL: str
     API_V1_PREFIX: str = "/api/v1"
+    LOGIN_ENDPOINT: str = "/login"
     ALLOWED_HOSTS: List[str] = ["*"]
 
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
