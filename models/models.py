@@ -1,15 +1,11 @@
-from typing import Annotated, List, Optional
 import uuid
-
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from sqlalchemy import Column, DateTime, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.sql import func
-
-from fastapi import Depends, FastAPI, HTTPException, Query
-from sqlmodel import Field, Session, SQLModel, create_engine, select
-
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class Org(SQLModel, table=True):
@@ -35,19 +31,78 @@ class Org(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     )
 
+    users: list["User"] = Relationship(back_populates="org")
 
 
 
-# sqlite_file_name = "database.db"
-postgres_url = f"postgresql://postgres:root@localhost:5432/postgres"
-connect_args = {"check_same_thread": False}
-engine = create_engine(postgres_url,)
-
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+class User(SQLModel, table = True):
+    __tablename__ = "User"
+    __table_args__ = {"schema": "marketplace"}
 
 
-create_db_and_tables()
+    id: uuid.UUID = Field(default=None, sa_column=Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()))
+    org_id: uuid.UUID = Field(foreign_key="marketplace.Org.id")
+    role: str = "member"
+    status: str = "active"
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+    org: Optional["Org"] = Relationship(back_populates=None)
+
+
+
+class Template(SQLModel, table=True):
+    __tablename__ = "template"
+    __table_args__ = {"schema": "marketplace"}
+
+
+    id: uuid.UUID = Field(default=None, sa_column=Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()))
+    org_id: uuid.UUID = Field(foreign_key="marketplace.Org.id")
+    name: str = Field(nullable=False)                    # e.g., "CSV v1" or "Flipkart v2"
+    marketplace: Optional[str] = None                    # set only when role == 'output'
+    schema: Optional[Dict[str, Any]] = Field(
+        default=None,
+        sa_column=Column(JSONB, nullable=True),
+    )
+
+    version: int = Field(default=1, nullable=False)
+    active: bool = Field(default=True, nullable=False)
+
+
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+
+
+class OutboundItem(SQLModel, table=True):
+    __tablename__ = "items"
+    __table_args__ = {"schema": "marketplace"}
+
+
+    id: uuid.UUID = Field(default=None, sa_column=Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()))
+    org_id: uuid.UUID = Field(foreign_key="marketplace.Org.id")
+    template_id: uuid.UUID = Field(foreign_key="marketplace.template.id")
+    data: Dict[str, Any] = Field(
+        default=None,
+        sa_column=Column(JSONB, nullable=True),
+    )
+   # canonical, marketplace-shaped payload
+    status: str = Field(default="queued", nullable=False)  
+
+    created_at: datetime = Field(sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False))
+    updated_at: datetime = Field(sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False))
+
+
+# # sqlite_file_name = "database.db"
+# postgres_url = f"postgresql://postgres:root@localhost:5432/postgres"
+# connect_args = {"check_same_thread": False}
+# engine = create_engine(postgres_url,)
+
+# def create_db_and_tables():
+#     SQLModel.metadata.create_all(engine)
+
+
+# create_db_and_tables()
 
 # def get_session():
     # with Session(engine) as session:
