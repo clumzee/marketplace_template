@@ -31,3 +31,7 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 def org_scope_query(session, model, org_id):
     return session.execute(select(model).where(model.org_id == org_id))
+
+
+if __name__ == "__main__":
+    init_models()
