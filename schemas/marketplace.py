@@ -11,6 +11,7 @@ class Org(BaseModel):
 class User(BaseModel):
 
     org_id: str
+    password: str
     role: Literal["member", "admin"]
     status: Literal["active", "inactive"]
 

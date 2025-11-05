@@ -26,6 +26,7 @@ user_router = crud_router(
     update_schema=User,
     path="/users",
     tags=["Users"],
+    included_methods=['read', 'update']
 )
 
 template_router = crud_router(
