@@ -9,20 +9,18 @@ class Org(BaseModel):
 
 class User(BaseModel):
 
-    id: str = Field(...)
     org_id: str
     role: str
+    status: str
 
 class Template(BaseModel):
 
-    id: str
     org_id: str
     name: str
     schema: Dict
 
 class Item(BaseModel):
 
-    id: str
     org_id: str
     template_id: str
     data: Dict
