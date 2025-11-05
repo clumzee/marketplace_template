@@ -41,6 +41,7 @@ class User(SQLModel, table = True):
 
 
     id: uuid.UUID = Field(default=None, sa_column=Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()))
+    password: str
     org_id: uuid.UUID = Field(foreign_key="marketplace.Org.id")
     role: str = "member"
     status: str = "active"
@@ -92,21 +93,3 @@ class OutboundItem(SQLModel, table=True):
     created_at: datetime = Field(sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False))
     updated_at: datetime = Field(sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False))
 
-
-# # sqlite_file_name = "database.db"
-# postgres_url = f"postgresql://postgres:root@localhost:5432/postgres"
-# connect_args = {"check_same_thread": False}
-# engine = create_engine(postgres_url,)
-
-# def create_db_and_tables():
-#     SQLModel.metadata.create_all(engine)
-
-
-# create_db_and_tables()
-
-# def get_session():
-    # with Session(engine) as session:
-        # yield session
-# 
-# SessionDep = Annotated[Session, Depends(get_session)]
-# 
