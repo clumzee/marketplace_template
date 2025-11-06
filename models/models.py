@@ -93,3 +93,23 @@ class OutboundItem(SQLModel, table=True):
     created_at: datetime = Field(sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False))
     updated_at: datetime = Field(sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False))
 
+
+if __name__ == "__main__":
+
+    from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+    from sqlalchemy.orm import sessionmaker
+    from sqlmodel import Session, SQLModel, create_engine
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    import os
+    DB_URL = os.environ['DB_URL']
+
+    engine = create_async_engine(DB_URL, echo=False, future=True)
+    AsyncSessionLocal = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+
+
+    async def init_models():
+        async with engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.create_all)
