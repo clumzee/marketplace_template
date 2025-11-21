@@ -128,11 +128,30 @@ async def add_item(
     return {"Status":"OK"}
 
 
+@custom_items_router.get("/template_filter/{template_id}", summary="Items of a particular Template ID, based on the Marketplace")
+async def add_item(
+    template_id: str,
+    session: AsyncSession = Depends(get_session),
+):
 
-app.include_router(org_router, dependencies=[Security(require_user)])
-app.include_router(user_router, dependencies=[Security(require_user)])
-app.include_router(custom_user_router, dependencies=[Security(require_user)])
-app.include_router(template_router, dependencies=[Security(require_user)])
-app.include_router(item_router, dependencies=[Security(require_user)])
-app.include_router(custom_items_router, dependencies=[Security(require_user)])
-app.include_router(custom_items_router, dependencies=[Security(require_user)])
+    # Fetching Templates for the Organization
+    query = select(ItemTable)
+    query = query.where(ItemTable.template_id == template_id)
+
+    items = await session.execute(query)
+    items = items.scalars().all()
+    if items == []:
+        raise HTTPException("No Items for such query")
+
+
+    return {"Items":items}
+
+
+
+
+app.include_router(org_router)
+app.include_router(user_router)
+app.include_router(custom_user_router)
+app.include_router(template_router)
+app.include_router(item_router)
+app.include_router(custom_items_router)

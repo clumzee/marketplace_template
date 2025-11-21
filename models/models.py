@@ -96,20 +96,21 @@ class OutboundItem(SQLModel, table=True):
 
 if __name__ == "__main__":
 
-    from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-    from sqlalchemy.orm import sessionmaker
-    from sqlmodel import Session, SQLModel, create_engine
-    from dotenv import load_dotenv
-
-    load_dotenv()
-
+    import asyncio
     import os
-    DB_URL = os.environ['DB_URL']
+    from sqlmodel import SQLModel
+    from sqlalchemy.ext.asyncio import create_async_engine
+    from dotenv import load_dotenv
+    from sqlalchemy.sql import text
 
-    engine = create_async_engine(DB_URL, echo=False, future=True)
-    AsyncSessionLocal = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
+    DB_URL = os.environ["DB_URL"]
+    engine = create_async_engine(DB_URL, echo=True, future=True)
 
     async def init_models():
         async with engine.begin() as conn:
+            await conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS marketplace;"))
+
             await conn.run_sync(SQLModel.metadata.create_all)
+
+    asyncio.run(init_models())

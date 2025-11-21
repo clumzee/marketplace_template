@@ -1,0 +1,14 @@
+{
+  "productName": "Name",
+  "brand": "BrandName",
+  "gender": "Gender",
+  "category": "Category",
+  "color": "Color",
+  "size": "Size",
+  "mrp": "MRP",
+  "price": "Price",
+  "sku": "SKU",
+  "description": "Description",
+  "material": "Material",
+  "images": "Image1"
+}
